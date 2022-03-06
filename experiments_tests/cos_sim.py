@@ -1,3 +1,6 @@
+# 入力フレーズに対してコサイン類似度を求めていく
+# 類似度の結果をjson, pklで出力
+
 from sentence_transformers import SentenceTransformer
 import numpy as np
 import torch
@@ -5,32 +8,35 @@ from torch import nn
 import pickle
 import json
 
+# 今回の入力
 key_phrase = 'pulls the trigger'
-
+# データセットの読み込み
 with open('combined_word2id_dict.pkl', 'rb') as f:
     phrase_dict = pickle.load(f)
 
-# phrase_dict = {'pull a trigger': '0', 'squeezes off a quick burst of shots': '1', 'takes aim': '2'}
-
+# PhraseBERTのモデルの読み込み
 model = SentenceTransformer('whaleloops/phrase-bert')
-# phrase_embs = model.encode( phrase_list )
-# [p1, p2, p3] = phrase_embs
 
+# 入力のベクトル表現を得る len(p1) = 256 の固定長
 p1 = model.encode(key_phrase)
 
 cos_sim = nn.CosineSimilarity(dim=0)
-
 result = {}
+
+# データセットの各フレーズに対してiterate
 for phrase, id in phrase_dict.items():
     print('phrase is:', phrase)
     print('id is:', id)
+    # フレーズのベクトル表現を得る
     emb = model.encode(phrase)
+    # 入力とフレーズとのコサイン類似度を求める
     similarity = cos_sim(torch.tensor(p1), torch.tensor(emb))
     print('similarity is:', similarity)
-    print('similarty.item()', similarity.item())
-    print('type(similarity.item())', type(similarity.item()))
+    # print('similarty.item()', similarity.item())
     result[phrase] = similarity.item()
 
+
+# 結果の保存
 with open('results_dict.json', 'w') as f:
     json.dump(result, f, indent=4)
 

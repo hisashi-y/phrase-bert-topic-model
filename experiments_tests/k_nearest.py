@@ -1,3 +1,5 @@
+# コサイン類似度をソートして上位k件を得る
+
 import json
 from operator import itemgetter
 
